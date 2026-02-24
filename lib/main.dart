@@ -7,7 +7,6 @@
 // class MyApp extends StatelessWidget {
 //   const MyApp({super.key});
 
-
 //   @override
 //   Widget build(BuildContext context) {
 //     return MaterialApp(
@@ -21,3 +20,12 @@
 //   }
 // }
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+Future<void> main() async {
+  await Supabase.initialize(
+    url: 'https://ktxjilucrbbgscdqznwz.supabase.co',
+    anonKey: 'sb_publishable_V-4Y-XaTIrHrbnMbwKWtHA_rowQON7u',
+  );
+  runApp(MyApp());
+}
