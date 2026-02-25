@@ -1,31 +1,26 @@
-// import 'package:flutter/material.dart';
-
-// void main() {
-//   runApp(const MyApp());
-// }
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'Flutter Demo',
-//       theme: ThemeData(
-
-//         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-//       ),
-//       home: const MyHomePage(title: 'Flutter Demo Home Page'),
-//     );
-//   }
-// }
-
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'screens/login.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   await Supabase.initialize(
     url: 'https://ktxjilucrbbgscdqznwz.supabase.co',
-    anonKey: 'sb_publishable_V-4Y-XaTIrHrbnMbwKWtHA_rowQON7u',
+    anonKey: 'mgjlypqfbpjmxwpjrgmo', // coloque sua anon public key
   );
-  runApp(MyApp());
+
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: LoginScreen(),
+    );
+  }
 }
