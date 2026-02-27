@@ -12,58 +12,49 @@ class CreateGameScreen extends StatefulWidget {
 class _CreateGameScreenState extends State<CreateGameScreen> {
   final esporteController = TextEditingController();
   final service = SupabaseService();
-
   bool isLoading = false;
 
   Future<void> salvarJogo() async {
-    if (esporteController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Informe o esporte"),
-          backgroundColor: Colors.orange,
-        ),
-      );
+    final esporte = esporteController.text.trim();
+
+    if (esporte.isEmpty) {
+      _showSnackBar("Informe o esporte", Colors.orange);
       return;
     }
 
     final user = Supabase.instance.client.auth.currentUser;
-
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Usuário não autenticado"),
-          backgroundColor: Colors.red,
-        ),
+      _showSnackBar(
+        "Usuário não autenticado. Faça login novamente.",
+        Colors.red,
       );
       return;
     }
 
     try {
-      setState(() {
-        isLoading = true;
-      });
+      setState(() => isLoading = true);
 
-      await service.createGame({
-        'esporte': esporteController.text.trim(),
-        'data_hora': DateTime.now().toIso8601String(),
-        'criador_id': user.id,
-      });
+      await service.createGame(esporte);
 
       if (mounted) {
+        _showSnackBar("Jogo criado com sucesso!", Colors.green);
         Navigator.pop(context);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Erro ao salvar jogo: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        _showSnackBar("Erro ao salvar jogo: $e", Colors.red);
+      }
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
+  }
+
+  void _showSnackBar(String mensagem, Color cor) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensagem), backgroundColor: cor));
   }
 
   @override
@@ -75,7 +66,7 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Criar Jogo")),
+      appBar: AppBar(title: const Text("Criar Novo Jogo")),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -83,16 +74,22 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
             TextField(
               controller: esporteController,
               decoration: const InputDecoration(
-                labelText: "Esporte",
+                labelText: "Qual o esporte?",
+                hintText: "Ex: Futebol, Vôlei, Basquete",
                 border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.sports_soccer),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             isLoading
                 ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: salvarJogo,
-                    child: const Text("Salvar"),
+                : SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: salvarJogo,
+                      child: const Text("Salvar Jogo"),
+                    ),
                   ),
           ],
         ),
