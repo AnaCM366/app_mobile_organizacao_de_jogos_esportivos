@@ -1,7 +1,8 @@
+import 'package:app_mobile_organizacao_de_jogos_esportivos/screens/registroScreen.dart';
 import 'package:flutter/material.dart';
 import '../services/supabase_service.dart';
 import 'home_page.dart';
-import 'registro.dart';
+import 'registro.dart' hide SupabaseService;
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -10,6 +11,8 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final emailController = TextEditingController();
     final senhaController = TextEditingController();
+
+    // CORREÇÃO: Use SupabaseService() com "S" maiúsculo
     final service = SupabaseService();
 
     return Scaffold(
@@ -23,20 +26,23 @@ class LoginScreen extends StatelessWidget {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-
             TextField(
               controller: emailController,
-              decoration: const InputDecoration(labelText: "Email"),
+              decoration: const InputDecoration(
+                labelText: "Email",
+                border: OutlineInputBorder(),
+              ),
             ),
-
+            const SizedBox(height: 10),
             TextField(
               controller: senhaController,
-              decoration: const InputDecoration(labelText: "Senha"),
+              decoration: const InputDecoration(
+                labelText: "Senha",
+                border: OutlineInputBorder(),
+              ),
               obscureText: true,
             ),
-
             const SizedBox(height: 20),
-
             ElevatedButton(
               onPressed: () async {
                 try {
@@ -44,30 +50,30 @@ class LoginScreen extends StatelessWidget {
                     emailController.text.trim(),
                     senhaController.text.trim(),
                   );
-
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const HomeScreen()),
-                  );
+                  if (context.mounted) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const HomeScreen()),
+                    );
+                  }
                 } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Erro ao fazer login: $e"),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Erro: $e"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 }
               },
               child: const Text("Entrar"),
             ),
-
             TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                );
-              },
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RegistroScreen()),
+              ),
               child: const Text("Cadastre-se"),
             ),
           ],

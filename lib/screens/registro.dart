@@ -12,112 +12,72 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final nomeController = TextEditingController();
   final emailController = TextEditingController();
   final senhaController = TextEditingController();
-  final service = SupabaseService();
-
+  final service = SupabaseService(); // CORREÇÃO: Usando a Classe correta
   bool isLoading = false;
 
   Future<void> cadastrar() async {
-    final nome = nomeController.text.trim();
-    final email = emailController.text.trim();
-    final senha = senhaController.text.trim();
-
-    if (nome.isEmpty || email.isEmpty || senha.isEmpty) {
-      _showSnackBar(
-        "Preencha todos os campos, incluindo o nome",
-        Colors.orange,
-      );
+    if (nomeController.text.isEmpty ||
+        emailController.text.isEmpty ||
+        senhaController.text.isEmpty) {
+      _msg("Preencha tudo!");
       return;
     }
 
-    if (senha.length < 6) {
-      _showSnackBar("A senha deve ter pelo menos 6 caracteres", Colors.orange);
-      return;
-    }
-
+    setState(() => isLoading = true);
     try {
-      setState(() => isLoading = true);
-
-      await service.register(email, senha, nome);
-
+      await service.register(
+        emailController.text.trim(),
+        senhaController.text.trim(),
+        nomeController.text.trim(),
+      );
       if (mounted) {
-        _showSnackBar("Cadastro realizado com sucesso!", Colors.green);
+        _msg("Cadastro realizado!", cor: Colors.green);
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) {
-        _showSnackBar("Erro ao cadastrar: ${e.toString()}", Colors.red);
-      }
+      if (mounted) _msg("Erro: $e", cor: Colors.red);
     } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
-  void _showSnackBar(String mensagem, Color cor) {
+  void _msg(String m, {Color cor = Colors.orange}) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(mensagem), backgroundColor: cor));
-  }
-
-  @override
-  void dispose() {
-    nomeController.dispose();
-    emailController.dispose();
-    senhaController.dispose();
-    super.dispose();
+    ).showSnackBar(SnackBar(content: Text(m), backgroundColor: cor));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Criar Nova Conta")),
+      appBar: AppBar(title: const Text("Nova Conta")),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextField(
-                controller: nomeController,
-                decoration: const InputDecoration(
-                  labelText: "Nome Completo",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: "Email",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: senhaController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: "Senha",
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
-                ),
-              ),
-              const SizedBox(height: 24),
-              isLoading
-                  ? const CircularProgressIndicator()
-                  : SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: cadastrar,
-                        child: const Text("Salvar Cadastro"),
-                      ),
-                    ),
-            ],
-          ),
+        child: Column(
+          children: [
+            TextField(
+              controller: nomeController,
+              decoration: const InputDecoration(labelText: "Nome"),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: "Email"),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: senhaController,
+              decoration: const InputDecoration(labelText: "Senha"),
+              obscureText: true,
+            ),
+            const SizedBox(height: 30),
+            isLoading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: cadastrar,
+                    child: const Text("Finalizar Registro"),
+                  ),
+          ],
         ),
       ),
     );

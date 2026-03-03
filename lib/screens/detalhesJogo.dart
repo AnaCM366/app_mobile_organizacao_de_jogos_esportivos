@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
 
 class GameDetailsScreen extends StatefulWidget {
@@ -12,9 +11,10 @@ class GameDetailsScreen extends StatefulWidget {
 
 class _GameDetailsScreenState extends State<GameDetailsScreen> {
   final service = SupabaseService();
-  final userId = Supabase.instance.client.auth.currentUser?.id;
 
-  // Variável para controlar se o usuário está na partida localmente
+  // REMOVIDO: userId fixo aqui em cima para evitar erros de inicialização.
+  // Vamos buscar o ID dentro dos métodos de forma segura.
+
   bool jaEstaParticipando = false;
   bool isLoading = true;
 
@@ -24,22 +24,29 @@ class _GameDetailsScreenState extends State<GameDetailsScreen> {
     _checkParticipation();
   }
 
-  // Verifica se o usuário logado já está na lista de participações deste jogo
   Future<void> _checkParticipation() async {
     try {
+      final user = service.supabase.auth.currentUser;
+      if (user == null) {
+        setState(() => isLoading = false);
+        return;
+      }
+
       final response = await service.supabase
           .from('participacoes')
           .select()
           .eq('jogo_id', widget.jogo['id'])
-          .eq('usuario_id', userId!)
+          .eq('usuario_id', user.id) // Acesso seguro
           .maybeSingle();
 
-      setState(() {
-        jaEstaParticipando = response != null;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          jaEstaParticipando = response != null;
+          isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -48,20 +55,20 @@ class _GameDetailsScreenState extends State<GameDetailsScreen> {
       setState(() => isLoading = true);
 
       if (jaEstaParticipando) {
-        // Usa a função que você já tem no service
+        // Certifique-se que o método leaveGame existe no seu supabase_service.dart
         await service.leaveGame(widget.jogo['id']);
         _showSnackBar("Você saiu da partida!", Colors.orange);
       } else {
-        // Usa a função que você já tem no service
+        // Certifique-se que o método participate existe no seu supabase_service.dart
         await service.participate(widget.jogo['id']);
         _showSnackBar("Presença confirmada!", Colors.green);
       }
 
-      Navigator.pop(context); // Volta para atualizar a Home
+      if (mounted) Navigator.pop(context);
     } catch (e) {
       _showSnackBar("Erro: $e", Colors.red);
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -91,25 +98,17 @@ class _GameDetailsScreenState extends State<GameDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 15),
-                  Row(
-                    children: [
-                      const Icon(Icons.calendar_month, color: Colors.blue),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Data: ${widget.jogo['data_hora'] ?? 'Não informada'}",
-                      ),
-                    ],
+                  _infoRow(
+                    Icons.calendar_month,
+                    "Data: ${widget.jogo['data_hora'] ?? 'Não informada'}",
+                    Colors.blue,
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on, color: Colors.red),
-                      const SizedBox(width: 8),
-                      // Aqui acessamos o nome do estabelecimento que veio do Join no getGames()
-                      Text(
-                        "Local: ${widget.jogo['estabelecimentos']?['nome'] ?? 'A definir'}",
-                      ),
-                    ],
+                  // Acessa o nome do estabelecimento via join feito no getGames()
+                  _infoRow(
+                    Icons.location_on,
+                    "Local: ${widget.jogo['estabelecimentos']?['nome'] ?? 'A definir'}",
+                    Colors.red,
                   ),
                   const Divider(height: 40),
                   const Text(
@@ -136,17 +135,25 @@ class _GameDetailsScreenState extends State<GameDetailsScreen> {
                     ),
                   ),
                   const Spacer(),
-                  // Requisito 5: Convite (Simples botão de compartilhar)
                   OutlinedButton.icon(
-                    onPressed: () {
-                      _showSnackBar("Link de convite copiado!", Colors.blue);
-                    },
+                    onPressed: () =>
+                        _showSnackBar("Link de convite copiado!", Colors.blue),
                     icon: const Icon(Icons.share),
                     label: const Text("Convidar Amigos"),
                   ),
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _infoRow(IconData icon, String text, Color color) {
+    return Row(
+      children: [
+        Icon(icon, color: color),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text)),
+      ],
     );
   }
 }
