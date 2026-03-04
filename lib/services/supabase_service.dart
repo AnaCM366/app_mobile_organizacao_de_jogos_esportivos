@@ -8,7 +8,7 @@ class SupabaseService {
     final response = await supabase
         .from('jogos')
         .select('*, estabelecimentos(nome)')
-        .order('created_at', ascending: false);
+        .order('criado_em', ascending: false);
     return response as List<dynamic>;
   }
 
@@ -17,12 +17,17 @@ class SupabaseService {
     required String dataHora,
     required String estabelecimentoId,
   }) async {
-    // Atenção: O erro da imagem diz que 'data_hora' não existe no banco.
-    // Se este código falhar, mude o nome da chave abaixo para o nome que está no seu Supabase.
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      throw Exception("Sessão expirada. Por favor, faça login novamente.");
+    }
+
     await supabase.from('jogos').insert({
       'esporte': esporte,
       'data_hora': dataHora,
       'estabelecimento_id': estabelecimentoId,
+      'usuario_id': user.id,
     });
   }
 
@@ -31,6 +36,7 @@ class SupabaseService {
       email: email,
       password: password,
     );
+
     if (response.user != null) {
       await supabase.from('usuarios').insert({
         'id': response.user!.id,
@@ -44,21 +50,24 @@ class SupabaseService {
     await supabase.auth.signInWithPassword(email: email, password: password);
   }
 
+  // --- ALTERAÇÕES PARA PARTICIPAR DO JOGO ---
   Future<void> participate(String jogoId) async {
     final user = supabase.auth.currentUser;
     if (user == null) return;
-    await supabase.from('participacoes').insert({
-      'jogo_id': jogoId,
-      'usuario_id': user.id,
+
+    await supabase.from('jogadores').insert({
+      // Ajustado para os nomes que aparecem na sua imagem 539906.png
+      'cadastro_jogos_form_page_id': jogoId,
+      'user_id': user.id,
     });
   }
 
   Future<void> leaveGame(String jogoId) async {
     final user = supabase.auth.currentUser;
     if (user != null) {
-      await supabase.from('participacoes').delete().match({
-        'jogo_id': jogoId,
-        'usuario_id': user.id,
+      await supabase.from('jogadores').delete().match({
+        'cadastro_jogos_form_page_id': jogoId,
+        'user_id': user.id,
       });
     }
   }

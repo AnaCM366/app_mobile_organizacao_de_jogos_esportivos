@@ -1,8 +1,7 @@
-import 'package:app_mobile_organizacao_de_jogos_esportivos/screens/registroScreen.dart';
+import 'package:app_mobile_organizacao_de_jogos_esportivos/screens/registro.dart';
 import 'package:flutter/material.dart';
 import '../services/supabase_service.dart';
 import 'home_page.dart';
-import 'registro.dart' hide SupabaseService;
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -72,7 +71,7 @@ class LoginScreen extends StatelessWidget {
             TextButton(
               onPressed: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const RegistroScreen()),
+                MaterialPageRoute(builder: (_) => const RegisterScreen()),
               ),
               child: const Text("Cadastre-se"),
             ),
